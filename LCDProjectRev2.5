@@ -1,0 +1,131 @@
+//HR: http://www.microcontrollerboard.com/lcd.html Used this website to wrap our heads around what we are doing
+
+//E is responsible for loading data onto the LCD. When E is 1, data can be loaded
+//RS is responsible for selecting if a character or a command is being written to the LCD
+//When RS = 1 it is a character. When RS = 0 it is a command
+
+#include<string.h>
+
+const uint8_t WriteOut = 0b00001111;
+const uint8_t EMask = 0b00001000;
+const uint8_t RSMask = 0b00000100;
+
+void setup() {
+DDRD = 0b11111100; //Setting the 4 most significant bits to output to leave least significant open for debuging, 3 = E, 2 = RS 
+PORTD = 0b00000000; //no pull up resistors
+
+delay(15);
+//wait 15 ms;
+writeInit(0x30); // reset in 8-bit mode, D[3:0] ignored
+delayMicroseconds(4100);
+//wait 4.1 ms;
+writeInit(0x30); // reset in 8-bit mode, D[3:0] ignored
+delayMicroseconds(100);
+//wait 100 μs;
+writeInit(0x30); // reset in 8-bit mode, D[3:0] ignored
+delayMicroseconds(4100);
+//wait 4.1 ms;
+writeInit(0x20); // convert to 4-bit mode
+delayMicroseconds(40);
+// 40 μs;
+writeCommand(0x2C); // 2 lines, 5x11 dot matrix
+delayMicroseconds(40);
+//wait 40 μs;
+writeCommand(0x08); // display off, cursor off, blink off
+delayMicroseconds(40);
+//wait 40 μs;
+writeCommand(0x01); // clear display, home cursor
+delayMicroseconds(1640);
+//wait 1.64 ms;
+writeCommand(0x06); // shift cursor right, do not shift display
+delayMicroseconds(40);
+////wait 40 μs;
+writeCommand(0x0F); // display on, cursor on, cursor blink (last three bits)
+delayMicroseconds(40);
+//wait 40 μs;
+}
+
+/*
+ * writeInit initializes the LCD to recieve codes
+ */
+
+
+void writeInit(uint8_t Arg){
+  PORTD &= ~RSMask; //RS = 0
+  PORTD |= EMask; //E = 1
+  PORTD = ((PORTD & 0b00001111)|(Arg & 0b11110000));
+  delayMicroseconds(1);
+  PORTD &= ~EMask;
+  return;
+}
+
+/*
+ * writeCommands writes commands to the LCD
+ */
+
+void writeCommand(uint8_t Arg){
+PORTD &= ~RSMask; //RS = 0
+PORTD |= EMask; //E = 1
+PORTD = ((PORTD & 0b00001111)|(Arg & 0b11110000));
+    //write Arg[7:4];
+    delayMicroseconds(1);
+    PORTD &= ~EMask;
+    delayMicroseconds(1);
+    PORTD |= EMask;
+    //E = 1;
+    PORTD |= (Arg<<4);
+  //  write Arg[3:0];
+    delayMicroseconds(1);
+    PORTD &= ~EMask;
+    return;
+}
+
+/*
+ * writeData writes characters to the LCD
+ */
+
+void writeData(uint8_t Arg){
+PORTD |= RSMask; //RS = 1
+PORTD |= EMask; //E = 1
+PORTD = ((PORTD & 0b00001111)|(Arg & 0b11110000));
+    //write Arg[7:4];
+    delayMicroseconds(5);
+    PORTD &= ~EMask;
+    delayMicroseconds(5);
+    PORTD |= EMask;
+    //E = 1;
+    PORTD |= (Arg<<4);
+  //  write Arg[3:0];
+    delayMicroseconds(5);
+    PORTD &= ~EMask;
+    return;
+}
+
+void moveCursor(uint8_t Row, uint8_t Col){
+ //uint8_t Position = ((Col*0x40)+ Row);
+  writeCommand(((Row * 0x80)+ Col)+128);
+  delayMicroseconds(40);
+  //Serial.print(Position);
+  //Serial.print("\n");
+  
+ return;
+}
+
+
+void loop() {
+//writeCommand(0x0F); // display on, cursor on, cursor blink (last three bits)
+//delayMicroseconds(40);
+//writeData('A');
+//delayMicroseconds(40);
+//
+////moveCursor(0b00000000,0b00000000);
+////delay(500);
+//moveCursor(0,0);
+//delay(5);
+//moveCursor(0,6);
+////writeData(0b01000001);
+////delay(500);
+
+
+
+}
